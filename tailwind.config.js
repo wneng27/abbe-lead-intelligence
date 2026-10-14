@@ -1,0 +1,131 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  darkMode: 'class',
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {
+      colors: {
+        // ABBE semantic colors - static values
+        gold: {
+          DEFAULT: '#FEBA12',
+          50: '#FEF6E6',
+          100: '#FDE9B8',
+          200: '#FBD980',
+          300: '#FAC948',
+          400: '#F9BA17',
+          500: '#FEBA12',
+          600: '#D49E0E',
+          700: '#A87A0B',
+          800: '#7B5808',
+          900: '#503607',
+        },
+        ink: {
+          DEFAULT: '#1E232E',
+          light: '#1E232E',
+          dark: '#171C25',
+          50: '#F4F5F7',
+          100: '#E4E7EC',
+          200: '#C5CAD3',
+          300: '#9AA3B2',
+          400: '#5B6472',
+          500: '#333A49',
+          600: '#2B3140',
+          700: '#232936',
+          800: '#1E232E',
+          900: '#14181F',
+        },
+        // Theme-driven colors via CSS variables
+        background: 'rgb(var(--color-background) / <alpha-value>)',
+        foreground: 'rgb(var(--color-foreground) / <alpha-value>)',
+        card: 'rgb(var(--color-card) / <alpha-value>)',
+        'card-foreground': 'rgb(var(--color-card-foreground) / <alpha-value>)',
+        secondary: 'rgb(var(--color-secondary) / <alpha-value>)',
+        'secondary-foreground': 'rgb(var(--color-secondary-foreground) / <alpha-value>)',
+        muted: 'rgb(var(--color-muted) / <alpha-value>)',
+        'muted-foreground': 'rgb(var(--color-muted-foreground) / <alpha-value>)',
+        border: 'rgb(var(--color-border) / <alpha-value>)',
+        input: 'rgb(var(--color-input) / <alpha-value>)',
+        ring: 'rgb(var(--color-ring) / <alpha-value>)',
+        sidebar: 'rgb(var(--color-sidebar) / <alpha-value>)',
+        'sidebar-foreground': 'rgb(var(--color-sidebar-foreground) / <alpha-value>)',
+        'sidebar-muted': 'rgb(var(--color-sidebar-muted) / <alpha-value>)',
+        'sidebar-border': 'rgb(var(--color-sidebar-border) / <alpha-value>)',
+        'sidebar-hover': 'rgb(var(--color-sidebar-hover) / <alpha-value>)',
+        // Semantic
+        success: '#2F7A3B',
+        'success-light': '#E8F3E9',
+        'success-dark': '#2F7A3B',
+        warning: '#FEBA12',
+        'warning-light': '#FEF6E6',
+        risk: '#E67E22',
+        'risk-light': '#FBE9DA',
+        critical: '#C0392B',
+        'critical-light': '#E05A4A',
+        'critical-dark': '#E05A4A',
+        // Chart ramp
+        chart: {
+          1: '#F29E02',
+          2: '#C88304',
+          3: '#9D6806',
+          4: '#734D07',
+          5: '#503607',
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+      },
+      fontSize: {
+        '2xs': ['0.625rem', { lineHeight: '0.875rem' }],
+      },
+      borderRadius: {
+        'xl': '0.75rem',
+        '2xl': '1rem',
+        '3xl': '1.5rem',
+      },
+      boxShadow: {
+        'xs': '0 1px 2px 0 rgb(0 0 0 / 0.04)',
+        'sm': '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)',
+        'md': '0 2px 8px -2px rgb(0 0 0 / 0.08), 0 1px 4px -2px rgb(0 0 0 / 0.06)',
+        'lg': '0 4px 16px -4px rgb(0 0 0 / 0.1), 0 2px 8px -4px rgb(0 0 0 / 0.06)',
+        'xl': '0 8px 32px -8px rgb(0 0 0 / 0.12), 0 4px 16px -8px rgb(0 0 0 / 0.06)',
+        'gold': '0 0 0 3px rgb(254 186 18 / 0.25)',
+      },
+      keyframes: {
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'fade-out': {
+          '0%': { opacity: '1' },
+          '100%': { opacity: '0' },
+        },
+        'slide-in-right': {
+          '0%': { transform: 'translateX(100%)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        'slide-in-up': {
+          '0%': { transform: 'translateY(8px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        'scale-in': {
+          '0%': { transform: 'scale(0.96)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        'shimmer': {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+      },
+      animation: {
+        'fade-in': 'fade-in 0.2s ease-out',
+        'fade-out': 'fade-out 0.15s ease-in',
+        'slide-in-right': 'slide-in-right 0.25s ease-out',
+        'slide-in-up': 'slide-in-up 0.2s ease-out',
+        'scale-in': 'scale-in 0.15s ease-out',
+        'shimmer': 'shimmer 2s linear infinite',
+      },
+    },
+  },
+  plugins: [],
+};

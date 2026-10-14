@@ -1,0 +1,112 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light mode */
+    --color-background: 255 255 255;
+    --color-foreground: 30 35 46;
+    --color-card: 255 255 255;
+    --color-card-foreground: 30 35 46;
+    --color-secondary: 244 245 247;
+    --color-secondary-foreground: 30 35 46;
+    --color-muted: 244 245 247;
+    --color-muted-foreground: 91 100 114;
+    --color-border: 228 231 236;
+    --color-input: 228 231 236;
+    --color-ring: 254 186 18;
+    --color-sidebar: 30 35 46;
+    --color-sidebar-foreground: 232 234 237;
+    --color-sidebar-muted: 138 147 162;
+    --color-sidebar-border: 42 49 64;
+    --color-sidebar-hover: 42 49 64;
+  }
+
+  .dark {
+    /* Dark mode */
+    --color-background: 20 24 31;
+    --color-foreground: 232 234 237;
+    --color-card: 30 35 46;
+    --color-card-foreground: 232 234 237;
+    --color-secondary: 43 49 64;
+    --color-secondary-foreground: 232 234 237;
+    --color-muted: 43 49 64;
+    --color-muted-foreground: 154 163 178;
+    --color-border: 51 58 73;
+    --color-input: 51 58 73;
+    --color-ring: 254 186 18;
+    --color-sidebar: 23 28 37;
+    --color-sidebar-foreground: 232 234 237;
+    --color-sidebar-muted: 154 163 178;
+    --color-sidebar-border: 42 49 64;
+    --color-sidebar-hover: 43 49 64;
+  }
+
+  * {
+    border-color: rgb(var(--color-border));
+  }
+
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: rgb(var(--color-background));
+    color: rgb(var(--color-foreground));
+    font-feature-settings: 'cv11', 'ss01';
+    font-variation-settings: 'opsz' 32;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgb(var(--color-border));
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--color-muted-foreground));
+  }
+
+  /* Focus ring utility */
+  .focus-ring {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(var(--color-background)), 0 0 0 4px rgb(var(--color-ring));
+  }
+
+  /* Skeleton shimmer */
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      rgb(var(--color-secondary)) 0%,
+      rgb(var(--color-border)) 50%,
+      rgb(var(--color-secondary)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
