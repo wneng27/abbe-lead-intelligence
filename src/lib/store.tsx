@@ -1,11 +1,15 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import { supabase } from './supabase';
-import { fetchOpportunities, fetchCompanies, fetchDepartments, fetchUsers, fetchActivityLog, type DbOpportunity, type DbCompany, type DbDepartment, type DbUser, type DbActivityLog } from './db';
+import { fetchOpportunities, fetchCompanies, fetchDepartments, fetchUsers, fetchActivityLog, fetchAllContacts, fetchAllSignals, type DbOpportunity, type DbCompany, type DbDepartment, type DbUser, type DbActivityLog, type DbContact, type DbSignal } from './db';
 import { mapDbPriority, mapDbAssessment, assessmentToLabel, assessmentToTimingLabel, type Opportunity } from './opportunities';
 import type { SlaWorkflowData } from './sla';
-import { createDeadline } from './sla';
+import { createDeadline, formatSlaTimestamp } from './sla';
 import type { Status, AssessmentLevel } from './tokens';
 import { useAuth } from './auth';
+
+function formatTimestamp(iso: string): string {
+  return formatSlaTimestamp(iso);
+}
 
 export interface ActivityEntry {
   id: string;
@@ -52,10 +56,21 @@ function mapDbToOpportunity(
   departmentName: string | undefined,
   accountManagerEmail: string | undefined,
   accountManagerName: string | undefined,
+  contactsForCompany: DbContact[],
+  signalsForCompany: DbSignal[],
 ): Opportunity {
   const fitLevel = mapDbAssessment(db.fit_score);
-  const personLevel: AssessmentLevel = 'unknown';
-  const timingLevel: AssessmentLevel = 'unknown';
+
+  const contact = contactsForCompany[0] ?? null;
+  const personLevel: AssessmentLevel = contact
+    ? (contact.email || contact.phone ? 'strong' : 'moderate')
+    : 'unknown';
+
+  const timingLevel: AssessmentLevel = signalsForCompany.length > 0
+    ? (signalsForCompany.some((s) => s.confidence === 'high') ? 'strong'
+      : signalsForCompany.some((s) => s.confidence === 'medium') ? 'moderate'
+      : 'weak')
+    : 'unknown';
 
   const deptAssignedAt = db.department_id ? db.created_at : null;
   const reviewAssignedAt = db.account_manager_id ? db.updated_at ?? db.created_at : null;
@@ -74,9 +89,9 @@ function mapDbToOpportunity(
     department: departmentName ?? 'Unassigned',
     accountManager: accountManagerEmail ?? null,
     status: db.status as Status,
-    lastUpdated: db.updated_at ?? db.created_at,
+    lastUpdated: formatTimestamp(db.updated_at ?? db.created_at),
     discoveredDate: db.created_at,
-    contactName: null,
+    contactName: contact?.name ?? null,
     contactRole: null,
     sla: {
       department: {
@@ -99,10 +114,12 @@ function mapActivityLog(
   cMap: Map<string, DbCompany>,
   dMap: Map<string, string>,
   oMap: Map<string, Opportunity>,
+  dbOppsByCompany: Map<string, string>,
 ): ActivityEntry {
   const actor = log.actor_id ? uMap.get(log.actor_id) : undefined;
   const opp = log.opportunity_id ? oMap.get(log.opportunity_id) : undefined;
-  const company = opp?.company ?? (log.opportunity_id ? cMap.get(log.opportunity_id)?.company_name ?? '' : '');
+  const oppCompanyId = opp ? (dbOppsByCompany.get(opp.id) ?? null) : null;
+  const company = opp?.company ?? (oppCompanyId ? cMap.get(oppCompanyId)?.company_name ?? '' : '');
   const role: string = actor
     ? actor.role === 'administrator' ? 'Administrator'
       : actor.role === 'sales_leader' ? 'Sales Department'
@@ -150,12 +167,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     async function loadData() {
       try {
-        const [dbOpps, companies, departments, users, activity] = await Promise.all([
+        const [dbOpps, companies, departments, users, activity, allContacts, allSignals] = await Promise.all([
           fetchOpportunities(),
           fetchCompanies(),
           fetchDepartments(),
           fetchUsers(),
           fetchActivityLog(100),
+          fetchAllContacts(),
+          fetchAllSignals(),
         ]);
 
         if (cancelled) return;
@@ -172,6 +191,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         for (const u of users) uMap.set(u.id, u);
         setUserMap(uMap);
 
+        const contactsByCompany = new Map<string, DbContact[]>();
+        for (const c of allContacts) {
+          const arr = contactsByCompany.get(c.company_id) ?? [];
+          arr.push(c);
+          contactsByCompany.set(c.company_id, arr);
+        }
+
+        const signalsByCompany = new Map<string, DbSignal[]>();
+        for (const s of allSignals) {
+          const arr = signalsByCompany.get(s.company_id) ?? [];
+          arr.push(s);
+          signalsByCompany.set(s.company_id, arr);
+        }
+
+        const dbOppsByCompany = new Map<string, string>();
+        for (const o of dbOpps) dbOppsByCompany.set(o.id, o.company_id);
+
         const oMap = new Map<string, Opportunity>();
         const mapped = dbOpps.map((o) => {
           const am = o.account_manager_id ? uMap.get(o.account_manager_id) : undefined;
@@ -181,13 +217,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             o.department_id ? dMap.get(o.department_id) : undefined,
             am?.email,
             am?.name,
+            contactsByCompany.get(o.company_id) ?? [],
+            signalsByCompany.get(o.company_id) ?? [],
           );
           oMap.set(o.id, opp);
           return opp;
         });
         setOppMap(oMap);
         setOpportunities(mapped);
-        setActivityEvents(activity.map((log) => mapActivityLog(log, uMap, cMap, dMap, oMap)));
+        setActivityEvents(activity.map((log) => mapActivityLog(log, uMap, cMap, dMap, oMap, dbOppsByCompany)));
       } catch {
         if (!cancelled) {
           setOpportunities([]);

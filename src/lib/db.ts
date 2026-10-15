@@ -273,6 +273,18 @@ export async function fetchContacts(companyId: string): Promise<DbContact[]> {
   return data as DbContact[];
 }
 
+export async function fetchAllContacts(): Promise<DbContact[]> {
+  const { data, error } = await supabase.from('contacts').select('*').order('created_at', { ascending: false });
+  if (error) throw error;
+  return data as DbContact[];
+}
+
+export async function fetchAllSignals(): Promise<DbSignal[]> {
+  const { data, error } = await supabase.from('signals').select('*').order('signal_date', { ascending: false, nullsFirst: false });
+  if (error) throw error;
+  return data as DbSignal[];
+}
+
 export async function fetchExistingAccounts(): Promise<DbExistingAccount[]> {
   const { data, error } = await supabase.from('existing_accounts').select('*').order('created_at', { ascending: false });
   if (error) throw error;

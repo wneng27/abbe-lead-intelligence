@@ -219,7 +219,7 @@ function LeadHeaderSection({ opp, status, detail, slaStatus, getDeptLeaderName, 
           <HeaderMetaItem icon={<Calendar className="h-3.5 w-3.5" />} label="Assignment Date" value={assignmentDate ? formatSlaTimestamp(assignmentDate) : 'Not yet assigned'} />
           <HeaderMetaItem icon={<Clock className="h-3.5 w-3.5" />} label="Deadline" value={deadline ? formatSlaTimestamp(deadline) : '—'} />
           <HeaderMetaItem icon={<MapPin className="h-3.5 w-3.5" />} label="Industry" value={detail?.overview.industry ?? '—'} />
-          <HeaderMetaItem icon={<Radar className="h-3.5 w-3.5" />} label="Detected" value={detail?.overview.dateSurfaced ?? opp.discoveredDate} />
+          <HeaderMetaItem icon={<Radar className="h-3.5 w-3.5" />} label="Detected" value={formatSlaTimestamp(detail?.overview.dateSurfaced ?? opp.discoveredDate)} />
           <HeaderMetaItem icon={<Timer className="h-3.5 w-3.5" />} label="SLA Timer" value={slaStatus.contextLabel} valueClass={slaConfig.textClass} />
         </div>
         {(slaStatus.currentState === 'breached' || slaStatus.currentState === 'approaching' || slaStatus.currentState === 'due_soon') && (
@@ -425,7 +425,7 @@ function LeadIntelligenceSection({ detail, opp }: { detail: OpportunityDetail | 
             <p className="text-xs font-semibold text-foreground">{detail.timing.trigger}</p>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Calendar className="h-3.5 w-3.5" />
-              <span>Trigger date: <span className="font-medium text-foreground tabular-nums">{detail.timing.triggerDate}</span></span>
+              <span>Trigger date: <span className="font-medium text-foreground tabular-nums">{formatSlaTimestamp(detail.timing.triggerDate)}</span></span>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">{detail.timing.whyRelevantNow}</p>
           </div>
@@ -459,7 +459,7 @@ function LeadIntelligenceSection({ detail, opp }: { detail: OpportunityDetail | 
               category="timing"
               level={normalizeAssessmentLevel(detail.timing.assessment)}
               body={detail.timing.whyRelevantNow}
-              footer={detail.timing.triggerDate}
+              footer={formatSlaTimestamp(detail.timing.triggerDate)}
               footerLabel="Trigger Date"
             />
           </div>
@@ -2903,7 +2903,7 @@ export function OpportunityDetailPage({
                 {detail?.timing.triggerDate && (
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs text-muted-foreground">Trigger Date</span>
-                    <span className="text-sm font-medium text-foreground tabular-nums">{detail.timing.triggerDate}</span>
+                    <span className="text-sm font-medium text-foreground tabular-nums">{formatSlaTimestamp(detail.timing.triggerDate)}</span>
                   </div>
                 )}
               </div>
