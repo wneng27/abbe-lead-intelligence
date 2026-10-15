@@ -443,6 +443,8 @@ function LeadIntelligenceSection({ detail, opp }: { detail: OpportunityDetail | 
               body={detail.fit.rationale}
               footer={detail.fit.abbeCapability}
               footerLabel="ABBE Capability"
+              score={detail.fit.score}
+              maxScore={detail.fit.maxScore}
             />
             <AssessmentCard
               title="PERSON"
@@ -452,6 +454,8 @@ function LeadIntelligenceSection({ detail, opp }: { detail: OpportunityDetail | 
               body={detail.person.contactName ?? 'No contact identified'}
               footer={detail.person.contactRole ?? undefined}
               footerLabel="Role"
+              score={detail.person.score}
+              maxScore={detail.person.maxScore}
             />
             <AssessmentCard
               title="TIMING"
@@ -461,6 +465,8 @@ function LeadIntelligenceSection({ detail, opp }: { detail: OpportunityDetail | 
               body={detail.timing.whyRelevantNow}
               footer={formatSlaTimestamp(detail.timing.triggerDate)}
               footerLabel="Trigger Date"
+              score={detail.timing.score}
+              maxScore={detail.timing.maxScore}
             />
           </div>
         </div>
@@ -480,7 +486,7 @@ function LeadIntelligenceSection({ detail, opp }: { detail: OpportunityDetail | 
   );
 }
 
-function AssessmentCard({ title, icon, category, level, body, footer, footerLabel }: {
+function AssessmentCard({ title, icon, category, level, body, footer, footerLabel, score, maxScore }: {
   title: string;
   icon: React.ReactNode;
   category: 'fit' | 'person' | 'timing';
@@ -488,12 +494,19 @@ function AssessmentCard({ title, icon, category, level, body, footer, footerLabe
   body: string;
   footer?: string;
   footerLabel?: string;
+  score?: number;
+  maxScore?: number;
 }) {
   return (
     <div className="rounded-lg border border-border p-3 flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-bold text-foreground inline-flex items-center gap-1.5">{icon} {title}</span>
-        <IntelligenceIndicator category={category} level={level} size="sm" showLabel />
+        <div className="flex items-center gap-2">
+          {score !== undefined && maxScore !== undefined && (
+            <span className="text-xs font-bold tabular-nums text-foreground">{score}<span className="text-muted-foreground font-normal">/{maxScore}</span></span>
+          )}
+          <IntelligenceIndicator category={category} level={level} size="sm" showLabel />
+        </div>
       </div>
       <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">{body}</p>
       {footer && footerLabel && (

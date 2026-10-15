@@ -32,6 +32,7 @@ export interface Opportunity {
   title: string;
   fit: FitLevel;
   fitLabel: FitLabel;
+  fitScore: number | null;
   person: PersonLevel;
   personLabel: PersonLabel;
   timing: TimingLevel;

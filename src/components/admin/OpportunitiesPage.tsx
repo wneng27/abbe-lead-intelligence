@@ -247,10 +247,14 @@ function CompactIndicator({
   label,
   value,
   level,
+  score,
+  maxScore,
 }: {
   label: string;
   value: string;
   level: AssessmentLevel;
+  score?: number | null;
+  maxScore?: number;
 }) {
   const colorMap: Record<AssessmentLevel, string> = {
     strong: 'text-success',
@@ -261,7 +265,14 @@ function CompactIndicator({
   return (
     <div className="flex flex-col gap-0.5 min-w-0">
       <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
-      <span className={cn('text-xs font-medium truncate', colorMap[level])}>{value}</span>
+      <div className="flex items-baseline gap-1">
+        <span className={cn('text-xs font-medium truncate', colorMap[level])}>{value}</span>
+        {score !== undefined && score !== null && (
+          <span className="text-2xs font-bold tabular-nums text-muted-foreground">
+            {score}{maxScore ? `/${maxScore}` : ''}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -380,7 +391,7 @@ function OpportunityCard({ opp, role, onSelectOpportunity, getAccountManagerName
         <PriorityBadge priority={opp.priority} />
       </div>
       <div className="flex items-center gap-3">
-        <CompactIndicator label="FIT" value={opp.fitLabel} level={opp.fit} />
+        <CompactIndicator label="FIT" value={opp.fitLabel} level={opp.fit} score={opp.fitScore} maxScore={40} />
         <span className="text-muted-foreground/50">·</span>
         <CompactIndicator label="TIMING" value={opp.timingLabel} level={opp.timing} />
         {opp.totalScore !== null && opp.totalScore !== undefined && (
@@ -776,7 +787,7 @@ export function OpportunitiesPage({
       header: 'FIT',
       render: (row) => {
         const r = row as unknown as Opportunity;
-        return <CompactIndicator label="FIT" value={r.fitLabel} level={r.fit} />;
+        return <CompactIndicator label="FIT" value={r.fitLabel} level={r.fit} score={r.fitScore} maxScore={40} />;
       },
     },
     {
