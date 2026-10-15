@@ -86,10 +86,15 @@ export function mapDbPriority(dbPriority: string): Priority {
   }
 }
 
-export function mapDbAssessment(level: string | null): AssessmentLevel {
+export function mapDbAssessment(level: AssessmentLevel | number | null): AssessmentLevel {
+  if (typeof level === 'number') {
+    if (level >= 32) return 'strong';
+    if (level >= 20) return 'moderate';
+    if (level > 0) return 'weak';
+    return 'unknown';
+  }
   if (!level) return 'unknown';
-  if (level === 'strong' || level === 'moderate' || level === 'weak' || level === 'unknown') return level;
-  return 'unknown';
+  return level;
 }
 
 export function assessmentToLabel(level: AssessmentLevel, kind: 'fit' | 'person' | 'timing'): string {
@@ -305,7 +310,9 @@ export async function fetchOpportunityDetailFromDb(opportunityId: string): Promi
   const personLevel = (contact ? 'moderate' : 'unknown') as AssessmentLevel;
   const timingLevel = (signals.length > 0 ? 'moderate' : 'unknown') as AssessmentLevel;
 
-  const fitScore = opp.fit_score_value ?? (fitLevel === 'strong' ? 35 : fitLevel === 'moderate' ? 25 : fitLevel === 'weak' ? 10 : 0);
+  const fitScore = typeof opp.fit_score === 'number'
+    ? opp.fit_score
+    : opp.fit_score_value ?? (fitLevel === 'strong' ? 35 : fitLevel === 'moderate' ? 25 : fitLevel === 'weak' ? 10 : 0);
   const personScore = opp.person_score_value ?? (personLevel === 'strong' ? 25 : personLevel === 'moderate' ? 18 : personLevel === 'weak' ? 8 : 0);
   const timingScore = opp.timing_score_value ?? (timingLevel === 'strong' ? 25 : timingLevel === 'moderate' ? 18 : timingLevel === 'weak' ? 8 : 0);
 

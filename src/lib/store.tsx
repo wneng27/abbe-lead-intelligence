@@ -81,7 +81,7 @@ function mapDbToOpportunity(
     title: company?.company_name ?? 'Unknown',
     fit: fitLevel,
     fitLabel: assessmentToLabel(fitLevel, 'fit') as Opportunity['fitLabel'],
-    fitScore: db.fit_score_value ?? null,
+    fitScore: typeof db.fit_score === 'number' ? db.fit_score : db.fit_score_value ?? null,
     person: personLevel,
     personLabel: assessmentToLabel(personLevel, 'person') as Opportunity['personLabel'],
     timing: timingLevel,

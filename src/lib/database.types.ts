@@ -107,7 +107,7 @@ export interface DbOpportunity {
   account_manager_id: string | null;
   created_at: string;
   updated_at: string | null;
-  fit_score: AssessmentLevel | null;
+  fit_score: AssessmentLevel | number | null;
   fit_score_value: number | null;
   person_score_value: number | null;
   timing_score_value: number | null;
