@@ -108,6 +108,18 @@ export interface DbOpportunity {
   created_at: string;
   updated_at: string | null;
   fit_score: AssessmentLevel | null;
+  fit_score_value: number | null;
+  person_score_value: number | null;
+  timing_score_value: number | null;
+  total_score: number | null;
+  ai_summary: string | null;
+  ai_supporting_findings: string[] | null;
+  ai_conflicts: string[] | null;
+  ai_missing_information: string[] | null;
+  ai_confidence: 'high' | 'medium' | 'low' | null;
+  ai_rationale: string | null;
+  ai_person_assessment: string | null;
+  ai_timing_assessment: string | null;
 }
 
 export interface DbOpportunitySource {

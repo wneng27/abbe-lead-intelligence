@@ -383,6 +383,18 @@ function OpportunityCard({ opp, role, onSelectOpportunity, getAccountManagerName
         <CompactIndicator label="FIT" value={opp.fitLabel} level={opp.fit} />
         <span className="text-muted-foreground/50">·</span>
         <CompactIndicator label="TIMING" value={opp.timingLabel} level={opp.timing} />
+        {opp.totalScore !== null && opp.totalScore !== undefined && (
+          <>
+            <span className="text-muted-foreground/50">·</span>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">Score</span>
+              <span className={cn(
+                'text-xs font-bold tabular-nums',
+                opp.totalScore >= 80 ? 'text-success' : opp.totalScore >= 50 ? 'text-warning' : 'text-critical'
+              )}>{opp.totalScore}/100</span>
+            </div>
+          </>
+        )}
       </div>
       {(opp.contactName || opp.personLabel !== 'Unknown') && (
         <div className="flex items-center gap-2 flex-wrap">
@@ -781,6 +793,31 @@ export function OpportunitiesPage({
       render: (row) => {
         const r = row as unknown as Opportunity;
         return <CompactIndicator label="TIMING" value={r.timingLabel} level={r.timing} />;
+      },
+    },
+    {
+      key: 'totalScore',
+      header: 'Score',
+      render: (row) => {
+        const r = row as unknown as Opportunity;
+        if (r.totalScore === null || r.totalScore === undefined) {
+          return <span className="text-xs text-muted-foreground italic">—</span>;
+        }
+        const pct = Math.round((r.totalScore / 100) * 100);
+        const colorClass = pct >= 80 ? 'text-success' : pct >= 50 ? 'text-warning' : 'text-critical';
+        return (
+          <div className="flex flex-col gap-0.5">
+            <span className={cn('text-sm font-bold tabular-nums', colorClass)}>{r.totalScore}<span className="text-xs text-muted-foreground font-normal">/100</span></span>
+            {r.aiConfidence && (
+              <span className={cn(
+                'text-2xs font-medium uppercase tracking-wide',
+                r.aiConfidence === 'high' ? 'text-success' : r.aiConfidence === 'medium' ? 'text-warning' : 'text-muted-foreground'
+              )}>
+                AI: {r.aiConfidence}
+              </span>
+            )}
+          </div>
+        );
       },
     },
     {

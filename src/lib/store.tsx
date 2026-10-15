@@ -105,6 +105,8 @@ function mapDbToOpportunity(
         completedAt: (db.status === 'reviewed' || db.status === 'ready_for_admin' || db.status === 'nominated') ? (db.updated_at ?? null) : null,
       },
     },
+    totalScore: db.total_score ?? null,
+    aiConfidence: db.ai_confidence ?? null,
   };
 }
 

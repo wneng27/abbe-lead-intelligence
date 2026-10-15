@@ -157,6 +157,18 @@ export async function createOpportunity(opp: {
   sales_leader_id?: string | null;
   account_manager_id?: string | null;
   fit_score?: AssessmentLevel | null;
+  fit_score_value?: number | null;
+  person_score_value?: number | null;
+  timing_score_value?: number | null;
+  total_score?: number | null;
+  ai_summary?: string | null;
+  ai_supporting_findings?: string[] | null;
+  ai_conflicts?: string[] | null;
+  ai_missing_information?: string[] | null;
+  ai_confidence?: 'high' | 'medium' | 'low' | null;
+  ai_rationale?: string | null;
+  ai_person_assessment?: string | null;
+  ai_timing_assessment?: string | null;
 }): Promise<DbOpportunity> {
   const { data, error } = await supabase
     .from('opportunities')
@@ -168,6 +180,18 @@ export async function createOpportunity(opp: {
       sales_leader_id: opp.sales_leader_id ?? null,
       account_manager_id: opp.account_manager_id ?? null,
       fit_score: opp.fit_score ?? null,
+      fit_score_value: opp.fit_score_value ?? null,
+      person_score_value: opp.person_score_value ?? null,
+      timing_score_value: opp.timing_score_value ?? null,
+      total_score: opp.total_score ?? null,
+      ai_summary: opp.ai_summary ?? null,
+      ai_supporting_findings: opp.ai_supporting_findings ?? null,
+      ai_conflicts: opp.ai_conflicts ?? null,
+      ai_missing_information: opp.ai_missing_information ?? null,
+      ai_confidence: opp.ai_confidence ?? null,
+      ai_rationale: opp.ai_rationale ?? null,
+      ai_person_assessment: opp.ai_person_assessment ?? null,
+      ai_timing_assessment: opp.ai_timing_assessment ?? null,
     })
     .select()
     .single();

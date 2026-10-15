@@ -697,9 +697,9 @@ function ScreeningSection({ detail }: { detail: OpportunityDetail }) {
         />
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <ScoreBar label="FIT" weight="40" score={detail.fit.score} max={detail.fit.maxScore} pct={fitPct} color="bg-blue-500" />
-        <ScoreBar label="PERSON" weight="30" score={detail.person.score} max={detail.person.maxScore} pct={personPct} color="bg-emerald-500" />
-        <ScoreBar label="TIMING" weight="30" score={detail.timing.score} max={detail.timing.maxScore} pct={timingPct} color="bg-amber-500" />
+        <ScoreBar label="FIT" weight="40" score={detail.fit.score} max={detail.fit.maxScore} pct={fitPct} color="bg-blue-500" rationale={detail.fit.rationale} />
+        <ScoreBar label="PERSON" weight="30" score={detail.person.score} max={detail.person.maxScore} pct={personPct} color="bg-emerald-500" rationale={detail.person.contactName ? `${detail.person.contactName} at ${detail.person.company}. Verification: ${detail.person.verificationStatus}.` : 'No contact identified yet.'} />
+        <ScoreBar label="TIMING" weight="30" score={detail.timing.score} max={detail.timing.maxScore} pct={timingPct} color="bg-amber-500" rationale={detail.timing.whyRelevantNow} />
         <div className="rounded-lg border border-border p-3 flex items-center justify-between gap-3">
           <span className="text-xs font-bold text-foreground uppercase tracking-wide">Total Score</span>
           <div className="flex items-center gap-3">
@@ -712,13 +712,14 @@ function ScreeningSection({ detail }: { detail: OpportunityDetail }) {
   );
 }
 
-function ScoreBar({ label, weight, score, max, pct, color }: {
+function ScoreBar({ label, weight, score, max, pct, color, rationale }: {
   label: string;
   weight: string;
   score: number;
   max: number;
   pct: number;
   color: string;
+  rationale?: string;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -729,6 +730,9 @@ function ScoreBar({ label, weight, score, max, pct, color }: {
       <div className="h-2 rounded-full bg-secondary overflow-hidden">
         <div className={cn('h-full rounded-full transition-all', color)} style={{ width: `${pct}%` }} />
       </div>
+      {rationale && (
+        <p className="text-2xs text-muted-foreground leading-relaxed mt-0.5 italic">{rationale}</p>
+      )}
     </div>
   );
 }

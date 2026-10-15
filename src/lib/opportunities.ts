@@ -45,6 +45,8 @@ export interface Opportunity {
   contactName: string | null;
   contactRole: string | null;
   sla: SlaWorkflowData;
+  totalScore: number | null;
+  aiConfidence: 'high' | 'medium' | 'low' | null;
 }
 
 import { supabase } from './supabase';
@@ -302,6 +304,22 @@ export async function fetchOpportunityDetailFromDb(opportunityId: string): Promi
   const personLevel = (contact ? 'moderate' : 'unknown') as AssessmentLevel;
   const timingLevel = (signals.length > 0 ? 'moderate' : 'unknown') as AssessmentLevel;
 
+  const fitScore = opp.fit_score_value ?? (fitLevel === 'strong' ? 35 : fitLevel === 'moderate' ? 25 : fitLevel === 'weak' ? 10 : 0);
+  const personScore = opp.person_score_value ?? (personLevel === 'strong' ? 25 : personLevel === 'moderate' ? 18 : personLevel === 'weak' ? 8 : 0);
+  const timingScore = opp.timing_score_value ?? (timingLevel === 'strong' ? 25 : timingLevel === 'moderate' ? 18 : timingLevel === 'weak' ? 8 : 0);
+
+  const aiSupporting = opp.ai_supporting_findings ?? [];
+  const aiConflicts = opp.ai_conflicts ?? [];
+  const aiMissing = opp.ai_missing_information ?? [];
+  const aiConfidence = opp.ai_confidence ?? 'low';
+
+  const fitRationale = opp.ai_rationale
+    ?? (evidenceItems.filter((e) => e.category === 'fit').map((e) => e.statement).join(' ') || 'No fit rationale available.');
+  const personAssessment = opp.ai_person_assessment
+    ?? (contact ? `Contact identified: ${contact.name} at ${company?.company_name ?? 'the company'}.` : 'No contact has been identified yet.');
+  const timingAssessment = opp.ai_timing_assessment
+    ?? (businessSignals.length > 0 ? businessSignals[0].description : 'No timing information available.');
+
   return {
     overview: {
       industry: company?.industry ?? '—',
@@ -313,9 +331,9 @@ export async function fetchOpportunityDetailFromDb(opportunityId: string): Promi
     },
     fit: {
       assessment: fitLevel,
-      score: fitLevel === 'strong' ? 35 : fitLevel === 'moderate' ? 25 : fitLevel === 'weak' ? 10 : 0,
+      score: fitScore,
       maxScore: 40,
-      rationale: evidenceItems.filter((e) => e.category === 'fit').map((e) => e.statement).join(' ') || 'No fit rationale available.',
+      rationale: fitRationale,
       abbeCapability: 'ABBE capability assessment not yet available.',
       evidenceIds: evidenceItems.filter((e) => e.category === 'fit').map((e) => e.id),
     },
@@ -329,7 +347,7 @@ export async function fetchOpportunityDetailFromDb(opportunityId: string): Promi
       sourceReference: null,
       verificationStatus: contact ? 'Needs Verification' : 'Unverified',
       lastVerifiedDate: null,
-      score: personLevel === 'strong' ? 25 : personLevel === 'moderate' ? 18 : personLevel === 'weak' ? 8 : 0,
+      score: personScore,
       maxScore: 30,
       evidenceIds: [],
     },
@@ -337,9 +355,9 @@ export async function fetchOpportunityDetailFromDb(opportunityId: string): Promi
       trigger: businessSignals.length > 0 ? businessSignals[0].type : 'No trigger identified',
       triggerDate: businessSignals.length > 0 ? businessSignals[0].date : opp.created_at,
       assessment: timingLevel,
-      score: timingLevel === 'strong' ? 25 : timingLevel === 'moderate' ? 18 : timingLevel === 'weak' ? 8 : 0,
+      score: timingScore,
       maxScore: 30,
-      whyRelevantNow: businessSignals.length > 0 ? businessSignals[0].description : 'No timing information available.',
+      whyRelevantNow: timingAssessment,
       evidenceIds: evidenceItems.filter((e) => e.category === 'timing').map((e) => e.id),
     },
     evidence: evidenceItems,
@@ -351,11 +369,11 @@ export async function fetchOpportunityDetailFromDb(opportunityId: string): Promi
       verifiedDate: null,
     },
     aiFindings: {
-      summary: 'AI analysis not yet available for this opportunity.',
-      supportingFindings: [],
-      conflicts: [],
-      missingInformation: [],
-      confidence: 'low',
+      summary: opp.ai_summary ?? 'AI analysis not yet available for this opportunity.',
+      supportingFindings: aiSupporting,
+      conflicts: aiConflicts,
+      missingInformation: aiMissing,
+      confidence: aiConfidence as 'high' | 'medium' | 'low',
     },
     recommendedAction: {
       why: 'Recommendation pending review of available evidence.',
