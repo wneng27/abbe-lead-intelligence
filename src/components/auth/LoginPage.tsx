@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Button, Input, Avatar } from '@/components/ui';
+import { Button, Input, Avatar, Select } from '@/components/ui';
 import {
   Shield,
   Briefcase,
@@ -9,11 +9,16 @@ import {
   Mail,
   X,
   ChevronRight,
+  UserPlus,
+  User as UserIcon,
 } from 'lucide-react';
 import {
   type Role,
+  ROLE_CONFIG,
 } from '@/lib/navigation';
 import { useAuth, type RememberedAccount } from '@/lib/auth';
+
+const DEPARTMENTS = ['Enterprise', 'Mid-Market', 'Strategic Accounts'];
 
 
 
@@ -142,6 +147,152 @@ function PreselectedAccountBanner({
   );
 }
 
+/* ─── Signup Form ─── */
+
+function SignupForm({ onBack }: { onBack: () => void }) {
+  const { signUp, state } = useAuth();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState<Role>('administrator');
+  const [department, setDepartment] = useState('');
+  const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string; confirm?: string; form?: string }>({});
+  const isSubmitting = state === 'loading';
+
+  const validate = () => {
+    const next: typeof errors = {};
+    if (!name.trim()) next.name = 'Full name is required.';
+    if (!email.trim()) {
+      next.email = 'Email is required.';
+    } else if (!EMAIL_REGEX.test(email.trim())) {
+      next.email = 'Please enter a valid email address.';
+    }
+    if (!password) {
+      next.password = 'Password is required.';
+    } else if (password.length < 8) {
+      next.password = 'Password must be at least 8 characters.';
+    }
+    if (password !== confirmPassword) {
+      next.confirm = 'Passwords do not match.';
+    }
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+    const dept = role === 'administrator' ? undefined : (department || undefined);
+    const result = await signUp(email, password, role, name.trim(), dept);
+    if (!result.success) {
+      setErrors({ form: result.error });
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
+      <Input
+        label="Full Name"
+        type="text"
+        placeholder="Jane Doe"
+        value={name}
+        onChange={(e) => {
+          setName(e.target.value);
+          if (errors.name) setErrors((p) => ({ ...p, name: undefined }));
+        }}
+        error={errors.name}
+        iconLeft={<UserIcon className="h-4 w-4" />}
+        autoComplete="name"
+      />
+      <Input
+        label="Email"
+        type="email"
+        placeholder="you@company.com"
+        value={email}
+        onChange={(e) => {
+          setEmail(e.target.value);
+          if (errors.email) setErrors((p) => ({ ...p, email: undefined }));
+        }}
+        error={errors.email}
+        iconLeft={<Mail className="h-4 w-4" />}
+        autoComplete="email"
+      />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Input
+          label="Password"
+          type="password"
+          placeholder="At least 8 characters"
+          value={password}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            if (errors.password) setErrors((p) => ({ ...p, password: undefined }));
+          }}
+          error={errors.password}
+          autoComplete="new-password"
+        />
+        <Input
+          label="Confirm Password"
+          type="password"
+          placeholder="Re-enter password"
+          value={confirmPassword}
+          onChange={(e) => {
+            setConfirmPassword(e.target.value);
+            if (errors.confirm) setErrors((p) => ({ ...p, confirm: undefined }));
+          }}
+          error={errors.confirm}
+          autoComplete="new-password"
+        />
+      </div>
+      <Select
+        label="Role"
+        value={role}
+        onChange={(v) => {
+          setRole(v as Role);
+          if (v === 'administrator') setDepartment('');
+        }}
+        options={[
+          { value: 'administrator', label: 'Administrator' },
+          { value: 'sales_leader', label: 'Sales Department' },
+          { value: 'account_manager', label: 'Account Manager' },
+        ]}
+      />
+      {role !== 'administrator' && (
+        <Select
+          label="Department"
+          value={department}
+          onChange={setDepartment}
+          placeholder="Select department..."
+          options={DEPARTMENTS.map((d) => ({ value: d, label: d }))}
+        />
+      )}
+
+      {errors.form && (
+        <div className="rounded-lg border border-critical/20 bg-critical/5 px-3 py-2">
+          <p className="text-xs text-critical dark:text-critical-light">{errors.form}</p>
+        </div>
+      )}
+
+      <Button
+        type="submit"
+        loading={isSubmitting}
+        className="w-full"
+        size="lg"
+      >
+        {isSubmitting ? 'Creating account...' : 'Create Account'}
+      </Button>
+
+      <button
+        type="button"
+        onClick={onBack}
+        className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors text-center"
+      >
+        Already have an account? Log in
+      </button>
+    </form>
+  );
+}
+
 /* ─── Login Form ─── */
 
 function LoginForm({
@@ -251,8 +402,9 @@ export function LoginPage() {
   const { rememberedAccounts, removeRememberedAccount } = useAuth();
   const [selectedAccount, setSelectedAccount] = useState<RememberedAccount | null>(null);
   const [showOtherLogin, setShowOtherLogin] = useState(false);
+  const [mode, setMode] = useState<'login' | 'signup'>('login');
 
-  const showReturningAccounts = rememberedAccounts.length > 0 && !selectedAccount && !showOtherLogin;
+  const showReturningAccounts = mode === 'login' && rememberedAccounts.length > 0 && !selectedAccount && !showOtherLogin;
 
   const handleSelectAccount = (account: RememberedAccount) => {
     setSelectedAccount(account);
@@ -312,38 +464,66 @@ export function LoginPage() {
           </div>
         </div>
         <div className="relative z-10 text-xs text-ink-400 mt-8">
-          Prototype environment — log in to explore
+          New here? Use the sign up option to create your account.
         </div>
       </div>
 
       {/* Right auth panel */}
       <div className="flex flex-1 items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-md flex flex-col gap-6">
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Lock className="h-4 w-4" />
-              <span className="text-xs font-medium uppercase tracking-wide">Log In</span>
-            </div>
-            <h2 className="text-xl font-bold text-foreground tracking-tight">
-              Welcome back
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Enter your credentials to access the ABBÉ platform.
-            </p>
-          </div>
-
-          {showReturningAccounts ? (
-            <ReturningAccounts
-              accounts={rememberedAccounts}
-              onSelect={handleSelectAccount}
-              onRemove={handleRemoveAccount}
-              onUseOther={handleUseOther}
-            />
+          {mode === 'signup' ? (
+            <>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <UserPlus className="h-4 w-4" />
+                  <span className="text-xs font-medium uppercase tracking-wide">Sign Up</span>
+                </div>
+                <h2 className="text-xl font-bold text-foreground tracking-tight">
+                  Create your account
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Register to access the ABBÉ lead intelligence platform.
+                </p>
+              </div>
+              <SignupForm onBack={() => setMode('login')} />
+            </>
           ) : (
-            <LoginForm
-              preselectedAccount={selectedAccount}
-              onClearPreselected={() => { setSelectedAccount(null); setShowOtherLogin(false); }}
-            />
+            <>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Lock className="h-4 w-4" />
+                  <span className="text-xs font-medium uppercase tracking-wide">Log In</span>
+                </div>
+                <h2 className="text-xl font-bold text-foreground tracking-tight">
+                  Welcome back
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Enter your credentials to access the ABBÉ platform.
+                </p>
+              </div>
+
+              {showReturningAccounts ? (
+                <ReturningAccounts
+                  accounts={rememberedAccounts}
+                  onSelect={handleSelectAccount}
+                  onRemove={handleRemoveAccount}
+                  onUseOther={handleUseOther}
+                />
+              ) : (
+                <LoginForm
+                  preselectedAccount={selectedAccount}
+                  onClearPreselected={() => { setSelectedAccount(null); setShowOtherLogin(false); }}
+                />
+              )}
+
+              <button
+                type="button"
+                onClick={() => { setMode('signup'); setSelectedAccount(null); setShowOtherLogin(false); }}
+                className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors text-center"
+              >
+                Don't have an account? Sign up
+              </button>
+            </>
           )}
         </div>
       </div>
