@@ -363,8 +363,11 @@ export async function fetchAccessDurationHours(): Promise<number> {
 }
 
 export async function grantUserAccess(email: string, _grantedBy: string): Promise<DbUser> {
+  const targetUser = await fetchUserByEmail(email);
+  if (!targetUser) throw new Error('Target user not found.');
+
   const { data, error } = await supabase.rpc('grant_sales_leader_access', {
-    target_email: email.toLowerCase().trim(),
+    target_user_id: targetUser.id,
   });
   if (error) throw error;
   return data as DbUser;
