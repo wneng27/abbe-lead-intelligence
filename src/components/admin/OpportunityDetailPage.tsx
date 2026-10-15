@@ -2339,9 +2339,9 @@ export function OpportunityDetailPage({
             id: r.id,
             actor: 'Reviewer',
             action: r.review_status === 'approved' ? 'Submitted as Reviewed' : r.review_status === 'returned' ? 'Returned for Review' : 'Review Saved (Draft)',
-            timestamp: new Date(r.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }),
-            disposition: r.review_status === 'approved' ? 'approved' : r.review_status === 'returned' ? 'returned' : undefined,
-            notes: undefined,
+            timestamp: new Date(r.reviewed_at ?? r.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }),
+            disposition: r.disposition ?? (r.review_status === 'approved' ? 'approved' : r.review_status === 'returned' ? 'returned' : undefined),
+            notes: r.comments ?? undefined,
           })).filter((r) => !existingIds.has(r.id));
           return [...mapped, ...prev];
         });
@@ -2593,6 +2593,7 @@ export function OpportunityDetailPage({
       opportunity_id: opp.id,
       reviewer_id: dbUserId,
       review_status: 'in_progress',
+      disposition: 'draft',
       comments: assessment.findings,
     }).catch((err) => console.error('Failed to save review to DB:', err));
     toast({ title: 'Review Saved', description: `${opp.company} — Draft saved.`, variant: 'success' });
@@ -2625,6 +2626,7 @@ export function OpportunityDetailPage({
       opportunity_id: opp.id,
       reviewer_id: dbUserId,
       review_status: 'approved',
+      disposition: 'approved',
       comments: assessment.findings,
       reviewed_at: new Date().toISOString(),
     }).catch((err) => console.error('Failed to submit review to DB:', err));
@@ -2651,6 +2653,14 @@ export function OpportunityDetailPage({
     setReviewRecords((prev) => [record, ...prev]);
     setAmReviewData((prev) => ({ ...prev, reviewStatus: 'returned' }));
     addTimelineEvent(`Returned for Review: ${reason}`, { previousStatus: prevStatus, newStatus: 'returned_for_review', reason });
+    createReview({
+      opportunity_id: opp.id,
+      reviewer_id: dbUserId,
+      review_status: 'returned',
+      disposition: reason,
+      comments: notes || undefined,
+      reviewed_at: new Date().toISOString(),
+    }).catch((err) => console.error('Failed to save return review to DB:', err));
     toast({
       title: 'Returned for Review',
       description: `${opp.company} — Reason: ${reason}${notes ? ` — ${notes}` : ''}`,

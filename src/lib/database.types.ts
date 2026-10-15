@@ -120,6 +120,9 @@ export interface DbReview {
   opportunity_id: string;
   reviewer_id: string | null;
   review_status: ReviewStatus;
+  disposition: string | null;
+  comments: string | null;
+  reviewed_at: string | null;
   created_at: string;
 }
 
