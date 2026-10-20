@@ -30,7 +30,6 @@ interface OpportunityUpdate {
   status?: Status;
   accountManager?: string | null;
   department?: string;
-  departmentId?: string | null;
   sla?: SlaWorkflowData;
   lastUpdated?: string;
 }
@@ -38,14 +37,13 @@ interface OpportunityUpdate {
 interface StoreContextValue {
   getOpportunity: (id: string) => Opportunity | undefined;
   getOpportunities: () => Opportunity[];
-  updateOpportunity: (id: string, updates: OpportunityUpdate) => Promise<boolean>;
+  updateOpportunity: (id: string, updates: OpportunityUpdate) => void;
   activityEvents: ActivityEntry[];
   addActivityEvent: (event: ActivityEntry) => void;
   loading: boolean;
   getAccountManagerName: (email: string | null) => string | null;
   getDeptLeaderName: (departmentName: string) => string | null;
   getDepartmentNames: () => string[];
-  getDepartmentId: (departmentName: string) => string | null;
   getAccountManagersInDept: (departmentName: string) => { email: string; name: string }[];
   getAccountManagerOptions: () => { email: string; name: string }[];
 }
@@ -259,7 +257,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     });
   }, [opportunities, overrides]);
 
-  const updateOpportunity = useCallback(async (id: string, updates: OpportunityUpdate): Promise<boolean> => {
+  const updateOpportunity = useCallback((id: string, updates: OpportunityUpdate) => {
     setOverrides((prev) => ({
       ...prev,
       [id]: { ...prev[id], ...updates },
@@ -268,16 +266,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const dbUpdates: Record<string, unknown> = {};
     if (updates.status) dbUpdates.status = updates.status;
     if (updates.lastUpdated) dbUpdates.updated_at = updates.lastUpdated;
-    if (updates.departmentId !== undefined) dbUpdates.department_id = updates.departmentId;
 
-    if (Object.keys(dbUpdates).length === 0) return true;
-
-    const { error } = await supabase.from('opportunities').update(dbUpdates).eq('id', id);
-    if (error) {
-      console.error('Failed to update opportunity:', error.message);
-      return false;
+    if (Object.keys(dbUpdates).length > 0) {
+      supabase.from('opportunities').update(dbUpdates).eq('id', id).then(({ error }) => {
+        if (error) console.error('Failed to update opportunity:', error.message);
+      });
     }
-    return true;
   }, []);
 
   const addActivityEvent = useCallback((event: ActivityEntry) => {
@@ -312,10 +306,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return Array.from(deptMap.values());
   }, [deptMap]);
 
-  const getDepartmentId = useCallback((departmentName: string): string | null => {
-    return Array.from(deptMap.entries()).find(([, name]) => name === departmentName)?.[0] ?? null;
-  }, [deptMap]);
-
   const getAccountManagersInDept = useCallback((departmentName: string): { email: string; name: string }[] => {
     const deptId = Array.from(deptMap.entries()).find(([, name]) => name === departmentName)?.[0];
     if (!deptId) return [];
@@ -341,7 +331,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       getAccountManagerName,
       getDeptLeaderName,
       getDepartmentNames,
-      getDepartmentId,
       getAccountManagersInDept,
       getAccountManagerOptions,
     }}>

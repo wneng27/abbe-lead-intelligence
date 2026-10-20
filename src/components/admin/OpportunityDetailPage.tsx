@@ -2286,7 +2286,7 @@ export function OpportunityDetailPage({
   const { user } = useAuth();
   const role = user!.role;
   const { toast } = useToast();
-  const { getOpportunity, updateOpportunity, addActivityEvent: addStoreActivity, getAccountManagerName, getDeptLeaderName, getDepartmentNames, getDepartmentId } = useStore();
+  const { getOpportunity, updateOpportunity, addActivityEvent: addStoreActivity, getAccountManagerName, getDeptLeaderName, getDepartmentNames } = useStore();
 
   const opp = getOpportunity(opportunityId);
   const [detail, setDetail] = useState<OpportunityDetail | null>(null);
@@ -2794,17 +2794,7 @@ export function OpportunityDetailPage({
     onBack();
   };
 
-  const handleRouteConfirm = async (department: string) => {
-    const deptId = getDepartmentId(department);
-    if (!deptId) {
-      toast({
-        title: 'Routing failed',
-        description: `Could not resolve "${department}" to a valid department. Please try again.`,
-        variant: 'error',
-      });
-      return;
-    }
-
+  const handleRouteConfirm = (department: string) => {
     const prev = currentStatus;
     const nowIso = getNow().toISOString();
     const newSla: SlaWorkflowData = {
@@ -2813,25 +2803,7 @@ export function OpportunityDetailPage({
     };
     setSlaWorkflow(newSla);
     setCurrentStatus('assigned_to_dept');
-
-    const success = await updateOpportunity(opp.id, {
-      department,
-      departmentId: deptId,
-      status: 'assigned_to_dept',
-      sla: newSla,
-    });
-
-    if (!success) {
-      setCurrentStatus(prev);
-      setSlaWorkflow(slaWorkflow);
-      toast({
-        title: 'Routing failed',
-        description: `${opp.company} — The database update failed. The opportunity has not been routed. Please try again.`,
-        variant: 'error',
-      });
-      return;
-    }
-
+    updateOpportunity(opp.id, { department, status: 'assigned_to_dept', sla: newSla });
     addTimelineEvent(`Routed to ${department}`, { previousStatus: prev, newStatus: 'assigned_to_dept', department });
     toast({
       title: 'Opportunity routed',
