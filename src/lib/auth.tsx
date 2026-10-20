@@ -177,12 +177,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
 
     async function loadInitialData() {
+      if (!user) return;
+
       const { data: deptData, error: deptError } = await supabase.from('departments').select('id, name');
-      if (!cancelled && !deptError && deptData) {
-        const map: Record<string, string> = {};
-        for (const d of deptData) map[d.id] = d.name;
-        setDepartmentMap(map);
+      if (cancelled) return;
+      if (deptError || !deptData) {
+        setDepartmentMap({});
+        setRegisteredUsers([]);
+        return;
       }
+
+      const map: Record<string, string> = {};
+      for (const d of deptData) map[d.id] = d.name;
+      setDepartmentMap(map);
 
       try {
         const duration = await fetchAccessDurationHours();
@@ -194,8 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const users = await fetchUsers();
         if (cancelled) return;
-        const deptMap = departmentMap;
-        const mapped = users.map((u) => dbUserToRegistered(u, u.department_id ? deptMap[u.department_id] : undefined));
+        const mapped = users.map((u) => dbUserToRegistered(u, u.department_id ? map[u.department_id] : undefined));
         setRegisteredUsers(mapped);
       } catch {
         if (!cancelled) setRegisteredUsers([]);
@@ -204,7 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     loadInitialData();
     return () => { cancelled = true; };
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (Object.keys(departmentMap).length === 0) return;
