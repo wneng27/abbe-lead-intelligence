@@ -38,6 +38,7 @@ interface StoreContextValue {
   getOpportunity: (id: string) => Opportunity | undefined;
   getOpportunities: () => Opportunity[];
   updateOpportunity: (id: string, updates: OpportunityUpdate) => void;
+  routeToDepartment: (opportunityId: string, departmentName: string) => Promise<{ success: boolean; error?: string }>;
   activityEvents: ActivityEntry[];
   addActivityEvent: (event: ActivityEntry) => void;
   loading: boolean;
@@ -274,6 +275,44 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const routeToDepartment = useCallback(async (opportunityId: string, departmentName: string): Promise<{ success: boolean; error?: string }> => {
+    const deptId = Array.from(deptMap.entries()).find(([, name]) => name === departmentName)?.[0];
+    if (!deptId) {
+      return { success: false, error: `Department "${departmentName}" not found.` };
+    }
+    const salesLeader = Array.from(userMap.values()).find((u) => u.role === 'sales_leader' && u.department_id === deptId);
+    if (!salesLeader) {
+      return { success: false, error: `No Sales Leader found for department "${departmentName}".` };
+    }
+
+    const nowIso = new Date().toISOString();
+    const { error } = await supabase
+      .from('opportunities')
+      .update({
+        status: 'assigned_to_dept',
+        department_id: deptId,
+        sales_leader_id: salesLeader.id,
+        updated_at: nowIso,
+      })
+      .eq('id', opportunityId);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    setOverrides((prev) => ({
+      ...prev,
+      [opportunityId]: {
+        ...prev[opportunityId],
+        status: 'assigned_to_dept',
+        department: departmentName,
+        lastUpdated: nowIso,
+      },
+    }));
+
+    return { success: true };
+  }, [deptMap, userMap]);
+
   const addActivityEvent = useCallback((event: ActivityEntry) => {
     setActivityEvents((prev) => [event, ...prev]);
     const dbUser = userMap.size > 0
@@ -325,6 +364,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       getOpportunity,
       getOpportunities,
       updateOpportunity,
+      routeToDepartment,
       activityEvents,
       addActivityEvent,
       loading,

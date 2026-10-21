@@ -2200,7 +2200,7 @@ function RouteToDeptModal({
 }: {
   open: boolean;
   onClose: () => void;
-  onConfirm: (department: string) => void;
+  onConfirm: (department: string) => Promise<void>;
   opp: Opportunity;
   departmentOptions: { name: string; leader: string }[];
   getDeptLeaderName: (departmentName: string) => string | null;
@@ -2208,12 +2208,15 @@ function RouteToDeptModal({
   const [selectedDept, setSelectedDept] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!selectedDept || submitting) return;
     setSubmitting(true);
-    onConfirm(selectedDept);
-    setSelectedDept('');
-    setSubmitting(false);
+    try {
+      await onConfirm(selectedDept);
+    } finally {
+      setSelectedDept('');
+      setSubmitting(false);
+    }
   };
 
   const handleClose = () => {
@@ -2286,7 +2289,7 @@ export function OpportunityDetailPage({
   const { user } = useAuth();
   const role = user!.role;
   const { toast } = useToast();
-  const { getOpportunity, updateOpportunity, addActivityEvent: addStoreActivity, getAccountManagerName, getDeptLeaderName, getDepartmentNames } = useStore();
+  const { getOpportunity, updateOpportunity, routeToDepartment, addActivityEvent: addStoreActivity, getAccountManagerName, getDeptLeaderName, getDepartmentNames } = useStore();
 
   const opp = getOpportunity(opportunityId);
   const [detail, setDetail] = useState<OpportunityDetail | null>(null);
@@ -2794,23 +2797,34 @@ export function OpportunityDetailPage({
     onBack();
   };
 
-  const handleRouteConfirm = (department: string) => {
+  const handleRouteConfirm = async (department: string) => {
+    setRouteModalOpen(false);
     const prev = currentStatus;
     const nowIso = getNow().toISOString();
     const newSla: SlaWorkflowData = {
       ...slaWorkflow,
       department: { assignedAt: nowIso, deadline: createDeadline(nowIso), completedAt: null },
     };
+
+    const result = await routeToDepartment(opp.id, department);
+
+    if (!result.success) {
+      toast({
+        title: 'Routing failed',
+        description: result.error ?? 'The opportunity could not be routed. Please try again.',
+        variant: 'error',
+      });
+      return;
+    }
+
     setSlaWorkflow(newSla);
     setCurrentStatus('assigned_to_dept');
-    updateOpportunity(opp.id, { department, status: 'assigned_to_dept', sla: newSla });
     addTimelineEvent(`Routed to ${department}`, { previousStatus: prev, newStatus: 'assigned_to_dept', department });
     toast({
       title: 'Opportunity routed',
       description: `${opp.company} — ${opp.title} has been routed to ${department}.`,
       variant: 'success',
     });
-    setRouteModalOpen(false);
   };
 
   const handleAddNoteConfirm = (note: string) => {
