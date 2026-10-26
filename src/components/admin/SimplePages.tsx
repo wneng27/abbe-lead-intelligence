@@ -149,6 +149,7 @@ export function TeamPage({
       const assignedOpps = getOpportunities().filter(
         (o) => o.accountManager === am.email,
       );
+  
       return {
         name: am.name,
         email: am.email,
@@ -181,6 +182,7 @@ export function TeamPage({
         }).length,
       };
     });
+    setDepartmentName(depname);
   }, [dept, getAccountManagersInDept, getOpportunities]);
 
   if (loading) {
@@ -320,7 +322,9 @@ export function TeamPage({
         <div className="flex items-center gap-2.5">
           <Building2 className="h-4 w-4 text-muted-foreground" />
           <div>
-            <p className="text-sm font-semibold text-foreground">{dept}</p>
+            <p className="text-sm font-semibold text-foreground">
+              {/* {departmentName} */}
+            </p>
             <p className="text-xs text-muted-foreground">
               {teamMembers.length} Account Manager
               {teamMembers.length !== 1 ? "s" : ""}

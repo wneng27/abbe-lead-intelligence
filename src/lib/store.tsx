@@ -57,6 +57,7 @@ export interface ActivityEntry {
 interface OpportunityUpdate {
   status?: Status;
   accountManager?: string | null;
+  accountManagerId?: string | null;
   department?: string;
   sla?: SlaWorkflowData;
   lastUpdated?: string;
@@ -75,7 +76,7 @@ interface StoreContextValue {
   getDepartmentNames: () => { id: string; name: string }[];
   getAccountManagersInDept: (
     departmentName: string,
-  ) => { email: string; name: string }[];
+  ) => {id:string, email: string; name: string }[];
   getAccountManagerOptions: () => { email: string; name: string }[];
 }
 
@@ -133,6 +134,8 @@ function mapDbToOpportunity(
     priority: mapDbPriority(db.priority),
     department: departmentName ?? "Unassigned",
     accountManager: accountManagerEmail ?? null,
+    accountManagerId: db.account_manager_id ?? null,
+    departmentId: db.department_id ?? null,
     status: db.status as Status,
     lastUpdated: formatTimestamp(db.updated_at ?? db.created_at),
     discoveredDate: db.created_at,
@@ -345,6 +348,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (updates.lastUpdated) dbUpdates.updated_at = updates.lastUpdated;
       if (updates.department_id !== undefined)
         dbUpdates.department_id = updates.department_id;
+      if (updates.accountManagerId !== undefined)
+        dbUpdates.account_manager_id = updates.accountManagerId;
 
       if (Object.keys(dbUpdates).length > 0) {
         supabase

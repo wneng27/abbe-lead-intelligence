@@ -2573,7 +2573,7 @@ export function OpportunityDetailPage({
       setSlaWorkflow(newSla);
       addTimelineEvent(`Assigned to ${toName}`, { previousStatus: 'dept_viewed', newStatus: 'assigned_to_am', accountManager: toName });
     }
-    updateOpportunity(opp.id, { status: 'assigned_to_am', accountManager: record.assignedTo, sla: newSla });
+    updateOpportunity(opp.id, { status: 'assigned_to_am', accountManager: record.assignedTo, accountManagerId: record.assignedTo, sla: newSla });
     setAssignmentModalOpen(false);
     toast({
       title: record.action === 'reassigned' ? 'Account Manager reassigned successfully.' : 'Assigned',
@@ -2822,7 +2822,7 @@ export function OpportunityDetailPage({
     setMissingInfoModalOpen(false);
   };
 
-  const currentOpp: Opportunity = { ...opp, accountManager: currentAccountManager, status: currentStatus, sla: slaWorkflow };
+  const currentOpp: Opportunity = { ...opp, accountManagerId: currentAccountManager, status: currentStatus, sla: slaWorkflow };
 
   return (
     <div className="flex flex-col gap-5">

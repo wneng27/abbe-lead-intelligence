@@ -39,7 +39,9 @@ export interface Opportunity {
   timingLabel: TimingLabel;
   priority: Priority;
   department: string;
+  departmentId:string | null;
   accountManager: string | null;
+  accountManagerId: string | null;
   status: Status;
   lastUpdated: string;
   discoveredDate: string;
