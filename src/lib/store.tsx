@@ -343,7 +343,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const dbUpdates: Record<string, unknown> = {};
       if (updates.status) dbUpdates.status = updates.status;
       if (updates.lastUpdated) dbUpdates.updated_at = updates.lastUpdated;
-      if(updates.department_id !== undefined) dbUpdates.department_id = updates.department_id;
+      if (updates.department_id !== undefined)
+        dbUpdates.department_id = updates.department_id;
 
       if (Object.keys(dbUpdates).length > 0) {
         supabase
@@ -410,16 +411,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [deptMap]);
 
   const getAccountManagersInDept = useCallback(
-    (departmentName: string): { email: string; name: string }[] => {
-      const deptId = Array.from(deptMap.entries()).find(
-        ([, name]) => name === departmentName,
+    (departmentName: string): { id: string; email: string; name: string }[] => {
+      let deptId = Array.from(deptMap.entries()).find(
+        ([id, name]) => name === departmentName || id === departmentName,
       )?.[0];
-      if (!deptId) return [];
+
+      if (!deptId) deptId = departmentName; // fallback to using the provided name as ID
+
       return Array.from(userMap.values())
         .filter(
           (u) => u.role === "account_manager" && u.department_id === deptId,
         )
-        .map((u) => ({ email: u.email, name: u.name }));
+        .map((u) => ({ id: u.id, email: u.email, name: u.name }));
     },
     [userMap, deptMap],
   );
