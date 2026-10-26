@@ -1,0 +1,2 @@
+[functions.setup-auth-users]
+verify_jwt = false
