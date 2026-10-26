@@ -755,8 +755,17 @@ export function OpportunitiesPage({
 
   const showAdminFilters = role === 'administrator';
 
-  const departmentOptions: SelectOption[] = useMemo(() =>
-    getDepartmentNames().map((d) => ({ value: d, label: d })),
+  // const departmentOptions: SelectOption[] = useMemo(() =>
+  //   getDepartmentNames().map((d) => ({ value: d, label: d })),
+  //   [getDepartmentNames],
+  // );
+
+    const departmentOptions: SelectOption[] = useMemo(() => {
+      const departments = getDepartmentNames();
+      return departments.map((d) => {
+        return {value:d.id , label: d.name}
+      });
+    },
     [getDepartmentNames],
   );
 

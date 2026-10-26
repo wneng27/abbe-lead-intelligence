@@ -2196,18 +2196,16 @@ function RouteToDeptModal({
   onConfirm,
   opp,
   departmentOptions,
-  getDeptLeaderName,
 }: {
   open: boolean;
   onClose: () => void;
   onConfirm: (department: string) => void;
   opp: Opportunity;
-  departmentOptions: { name: string; leader: string }[];
+  departmentOptions: {id:string; name: string; leader: string }[];
   getDeptLeaderName: (departmentName: string) => string | null;
 }) {
   const [selectedDept, setSelectedDept] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
-
   const handleConfirm = () => {
     if (!selectedDept || submitting) return;
     setSubmitting(true);
@@ -2238,13 +2236,12 @@ function RouteToDeptModal({
       }
     >
       <div className="flex flex-col gap-3">
-        {departmentOptions.map(({ name, leader }) => {
-          const dept = name;
-          const isSelected = selectedDept === dept;
+        {departmentOptions.map(dep => {
+          const isSelected = selectedDept === dep.id;
           return (
             <button
-              key={dept}
-              onClick={() => setSelectedDept(dept)}
+              key={dep.id}
+              onClick={() => setSelectedDept(dep.id)}
               className={cn(
                 'flex items-center gap-3 rounded-lg border p-4 text-left transition-all',
                 isSelected
@@ -2259,8 +2256,8 @@ function RouteToDeptModal({
                 <Building2 className="h-5 w-5" />
               </span>
               <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                <span className="text-sm font-semibold text-foreground">{dept}</span>
-                <span className="text-xs text-muted-foreground">Sales Leader: {leader}</span>
+                <span className="text-sm font-semibold text-foreground">{dep.name}</span>
+                <span className="text-xs text-muted-foreground">Sales Leader: {dep.leader}</span>
               </div>
               {isSelected && <CheckCircle2 className="h-5 w-5 text-gold shrink-0" />}
             </button>
@@ -2803,7 +2800,7 @@ export function OpportunityDetailPage({
     };
     setSlaWorkflow(newSla);
     setCurrentStatus('assigned_to_dept');
-    updateOpportunity(opp.id, { department, status: 'assigned_to_dept', sla: newSla });
+    updateOpportunity(opp.id, { department, status: 'assigned_to_dept', sla: newSla, department_id: department });
     addTimelineEvent(`Routed to ${department}`, { previousStatus: prev, newStatus: 'assigned_to_dept', department });
     toast({
       title: 'Opportunity routed',
@@ -3029,7 +3026,7 @@ export function OpportunityDetailPage({
         onClose={() => setRouteModalOpen(false)}
         onConfirm={handleRouteConfirm}
         opp={currentOpp}
-        departmentOptions={getDepartmentNames().map((name) => ({ name, leader: getDeptLeaderName(name) ?? 'Unassigned' }))}
+        departmentOptions={getDepartmentNames().map((dept) => ({ ...dept, leader: getDeptLeaderName(dept.name) ?? 'Unassigned' }))}
         getDeptLeaderName={getDeptLeaderName}
       />
     </div>
